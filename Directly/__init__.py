@@ -52,7 +52,7 @@ class Ext():
         for ExtDirect classes and methods to take.
         """
         try:
-            rpc = json.loads(request.body)
+            rpc_in = json.loads(request.body)
         except ValueError:
             # Probably not RPC... direct call in browser?
             # TODO: Figure out what to return in this case
@@ -64,27 +64,31 @@ class Ext():
         # modules from different apps
         if type(direct_mods) not in [tuple, list]:
             direct_mods = [direct_mods]
+        
+        if not type(rpc_in) == list:
+            rpc_in = [rpc_in]
 
         content = list()
 
-        # We care if it's a RPC, otherwise *meh*
-        # Extract usefull information
-        if rpc['type'] == 'rpc':
-            action = rpc['action']
-            method = rpc['method']
-            data = rpc['data']
-            tid = rpc['tid']
+        for rpc in rpc_in:
+            # We care if it's a RPC, otherwise *meh*
+            # Extract usefull information
+            if rpc['type'] == 'rpc':
+                action = rpc['action']
+                method = rpc['method']
+                data = rpc['data']
+                tid = rpc['tid']
 
-            # Give that usefull information to something to use it
-            method_return = Ext.getMethod(
-                            direct_mods, action, method, data, request)
-            # Build answer
-            answer_rpc = dict(type='rpc', tid=tid,
-                              action=action, method=method)
-            if method_return is not None:
-                answer_rpc['result'] = method_return
+                # Give that usefull information to something to use it
+                method_return = Ext.getMethod(
+                                direct_mods, action, method, data, request)
+                # Build answer
+                answer_rpc = dict(type='rpc', tid=tid,
+                                  action=action, method=method)
+                if method_return is not None:
+                    answer_rpc['result'] = method_return
 
-            content.append(answer_rpc)
+                content.append(answer_rpc)
         # Now send back that stuff... Or an empty list, 
         # if the request was not a RPC
         return HttpResponse(

@@ -38,14 +38,14 @@ Import the Directly module at the top.<br/>
 Decorate your classes with `Ext.cls` and methods with `Ext.method`.
 Alternatively, inherit your class from `Directly.DirectlyClass`.
 
-Here's an example with 2 API methods and a private (helper) method, that'll not be exported to the API:
+Here's an example with 2 API methods and a private (helper) method, that won't be exported to the API:
 ```python
 # file: django_project/app/directly.py
 
 from Directly import Ext
 
 @Ext.cls
-class UserManagement():
+class MyClass():
     @staticmethod
     @Ext.method
     def logged_in(request):
@@ -54,19 +54,19 @@ class UserManagement():
     @staticmethod
     @Ext.method
     def add(request, num1, num2):
-        return add_those(num1, num2)
+        return add_nums(num1, num2)
         
     # Notice the missing decorator?
     @staticmethod
-    def add_those(n1, n2):
+    def add_nums(n1, n2):
         return n1 + n2
 
 ```
 
 ##### Important:
-* Classes not decorated with `Ext.cls` completely ignored in the API.
+* Classes <i>not</i> decorated with `Ext.cls` will be completely ignored in the API.
 * All API methods need to be decorated with `@staticmethod` and `Ext.method`, otherwise they'll also be ignored!
-* First argument of API methods needs to be `request`. This is where you get the request object.
+* First argument of API methods <i>needs</i> to be `request`. This is where you get the request object.
 Directly will throw an exception if a method is decorated, but `request` is not the first argument, or not present at all.<br/>
 
 #### Generating API
@@ -76,7 +76,7 @@ To generate the API out of all this mess, add a new url to your main or app `url
 # file: django_project/app/urls.py
 
 from Directly import Ext
-# The classes we created above
+# The module we created above
 from apps import direct
 
 urlpatterns = patterns('',
