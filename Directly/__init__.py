@@ -226,10 +226,10 @@ class Ext():
         return method
 
     @staticmethod
-    def action(cls):
+    def cls(clss):
         """
         Wrapper for Ext-Classes, so we only expose those in the API
         """
-        if inspect.isclass(cls):
-            cls.is_ext = True
-        return cls
+        if inspect.isclass(clss):
+            clss.is_ext = True
+        return clss
