@@ -1,12 +1,11 @@
 #################################################
 #
 # Author: Alex Mannhold / Ninjadero
-#
-# Comments:
-# Well, I was tired of outdated implementations,
-# so I made my own outdated implementation!
-# This is developed for personal use in mind.
-# I don't take any responsibility. AT ALL.
+# 
+# Contact me on GitHub in case there's a problem,
+# or a change that doesn't qualify for a post in
+# the issues thread.
+# I will respond as soon as I can.
 #
 #################################################
 
@@ -16,11 +15,11 @@ from datetime import datetime
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
+# Convert datetime objects into an ISO String 'Y-m-d\TH:i:s'
 ExtJson = (lambda obj:
                     obj.isoformat() if isinstance(obj, datetime) else None)
 
-
+# Regular screwup
 class ExtDirectlyException(Exception):
     def __init__(self, message):
         self.__value = message
@@ -28,10 +27,11 @@ class ExtDirectlyException(Exception):
     def __str__(self):
         return repr(self.__value)
 
+# Minor screwup
 class ExtDirectlyMethodException(Exception):
     def __init__(self, method):
-        msg = 'Method \'{0}\' decorated, but does '.format(method.__name__) + \
-              'not have \'request\' parameter set.'
+        msg = 'Method \'{0}\' decorated. '.format(method.__name__) + \
+              'One parameter needed to catch the HttpRequest'
         self.__value = msg
 
     def __str__(self):
@@ -41,9 +41,9 @@ class DirectlyClass():
     """
     Alternative to class decorator. All we need is that tag.
     """
-    is_ext = True
-    # Hide 'missing init' warnings...
+    _is_ext = True
     def __init__(self): pass
+
 
 class Ext():
     @staticmethod
@@ -55,24 +55,22 @@ class Ext():
         try:
             rpc_in = json.loads(request.body)
         except ValueError:
-            # Probably not RPC... direct call in browser?
-            # TODO: Figure out what to return in this case
+            # Body is not JSON
             return HttpResponse(
                 content=json.dumps(None),
                 content_type='application/json')
 
-        # In case we want to include multiple 
-        # modules from different apps
+        # Is it one or multiple modules?
         if type(direct_mods) not in [tuple, list]:
             direct_mods = [direct_mods]
         
+        # If it's not batched, we still want a list to iterate over
         if not type(rpc_in) == list:
             rpc_in = [rpc_in]
 
-        content = list()
+        content = []
 
         for rpc in rpc_in:
-            # We care if it's a RPC, otherwise *meh*
             # Extract usefull information
             if rpc['type'] == 'rpc':
                 action = rpc['action']
@@ -80,20 +78,26 @@ class Ext():
                 data = rpc['data']
                 tid = rpc['tid']
 
-                # Give that usefull information to something to use it
+                # Start looking to called method
                 method_return = Ext.getMethod(
                                 direct_mods, action, method, data, request)
-                # Build answer
-                answer_rpc = dict(type='rpc', tid=tid,
-                                  action=action, method=method)
-                if method_return is not None:
-                    answer_rpc['result'] = method_return
+                # Create an answer object
+                answer_rpc = {
+                    'type': 'rpc',
+                    'tid': tid,
+                    'action': action,
+                    'method': method,
+                    'result': method_return
+                }
 
                 content.append(answer_rpc)
-        # Now send back that stuff... Or an empty list, 
-        # if the request was not a RPC
+        # Return empty list or list of objects
         return HttpResponse(
-                content=json.dumps(content, default=ExtJson),
+                content=json.dumps(
+                    content,
+                    default=ExtJson,
+                    ensure_ascii=False
+                ),
                 content_type='application/json')
 
     @staticmethod
@@ -102,16 +106,19 @@ class Ext():
         Uses the extracted data, iterates through the modules and
         calls the correct method if found.
         """
+        # Check every module/file
         for mod in direct_mods:
             for name, obj in inspect.getmembers(mod):
-                if inspect.isclass(obj):
+                # Then each class in it
+                if inspect.isclass(obj) and hasattr(obj, '_is_ext'):
                     if name == action:
-                        for m_name, m_obj in inspect.getmembers(obj):
-                            if inspect.isfunction(m_obj):
-                                if m_name == method:
-                                    # Method found, call someone to use it
-                                    return Ext.useMethod(m_obj, data, request)
-        # Worst case scenario, nothing found. Wrong API?
+                        for sub_name, sub_obj in inspect.getmembers(obj):
+                            # Then each staticfunction inside
+                            if (inspect.isfunction(sub_obj) and
+                                hasattr(sub_obj, '_is_ext')):
+                                if sub_name == method:
+                                    # Method found, use it!
+                                    return Ext.useMethod(sub_obj, data, request)
         return None
 
     @staticmethod
@@ -121,7 +128,7 @@ class Ext():
         including the Django-request, in case the user needs it.
         """
         answer = None
-
+        
         args, varargs, keywords, defaults = inspect.getargspec(method)
         # If defaults or data is missing or 0, they become NoneType.
         # So we just turn them back into something we can count.
@@ -129,16 +136,14 @@ class Ext():
             defaults = []
         if not type(data) == list:
             data = []
-
+        
         # We expect the user to catch 'request' as first argument.
         # Therefore argument count - 1 = REAL argument count
         if len(data) < (len(args) - len(defaults)) - 1:
             pass
             # Not enough args, can't use
-            # TODO: throw exception, user obviously screwed up
         elif len(data) > len(args) - 1:
             # Too many args, cut off the last ones and use it anyway...
-            # TODO: Maybe exception?
             data = data[:len(args) - 1]
         answer = method(request, *data)
 
@@ -155,7 +160,7 @@ class Ext():
         # In case the user provides a single module
         # Tuple or list doesn't matter, it needs to iterate
         if type(direct_mods) not in [tuple, list]:
-            direct_mods = tuple(direct_mods)
+            direct_mods = [direct_mods]
 
         classes = dict()
         provider = dict()
@@ -168,11 +173,11 @@ class Ext():
             if inspect.ismodule(mod):
                 for name, obj in inspect.getmembers(mod):
                     if inspect.isclass(obj):
-                        if hasattr(obj, 'is_ext'):
-                            classes[name] = list()
+                        if hasattr(obj, '_is_ext'):
+                            classes[name] = []
                             for m_name, m_obj in inspect.getmembers(obj):
                                 if inspect.isfunction(m_obj):
-                                    if hasattr(m_obj, 'is_ext'):
+                                    if hasattr(m_obj, '_is_ext'):
                                         method = dict()
                                         method['name'] = m_name
                                         method['len'] = len(inspect.getargspec(
@@ -183,9 +188,9 @@ class Ext():
 
         # This is what Sencha Architect expects. I deliver!
         if 'format' in request.REQUEST and request.REQUEST['format'] == 'json':
-            js_content = 'Ext.require(\'Ext.direct.*\'); \
-            Ext.namespace(\''+ namespace +'\');'+ namespace + '. \
-            REMOTING_API = ' + json.dumps(provider, default=ExtJson) + ';'
+            js_content = 'Ext.require(\'Ext.direct.*\');' +\
+            'Ext.namespace(\''+ namespace +'\');'+ namespace + \
+            '.REMOTING_API = ' + json.dumps(provider, default=ExtJson) + ';'
         else:
             # Browser/regular .js
             js_content = 'Ext.direct.Manager.addProvider(' + \
@@ -217,15 +222,9 @@ class Ext():
         """
         if inspect.isfunction(method):
             args, vargs, kw, defs = inspect.getargspec(method)
-            # We can not know if the user wants the request or not.
-            # We'd have three options:
-            # 1. ALWAYS fill first parameter with request, 
-            #    no matter what the name is
-            # 2. Check if request parameter is set and provide, 
-            #    otherwise don't
-            # 3. 'hardcode' request parameter requirement [x]
-            if len(args) >= 1 and args[0] == 'request':
-                method.is_ext = True
+            # We always deliver the HttpRequest to the first parameter
+            if len(args) >= 1:
+                method._is_ext = True
             else:
                 raise ExtDirectlyMethodException(method)
         return method
@@ -236,5 +235,5 @@ class Ext():
         Wrapper for Ext-Classes, so we only expose those in the API
         """
         if inspect.isclass(clss):
-            clss.is_ext = True
+            clss._is_ext = True
         return clss
