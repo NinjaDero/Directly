@@ -47,7 +47,7 @@ class DirectlyClass():
 
 class Ext():
     @staticmethod
-    def use(request, direct_mods):
+    def use(request, direct_mods, debug):
         """
         Takes RPC from request and searches a list or tuple direct_mods
         for ExtDirect classes and methods to take.
@@ -59,6 +59,8 @@ class Ext():
             return HttpResponse(
                 content=json.dumps(None),
                 content_type='application/json')
+        if debug:
+            print rpc_in
 
         # Is it one or multiple modules?
         if type(direct_mods) not in [tuple, list]:
@@ -207,13 +209,13 @@ class Ext():
                                         namespace, apis, url, request)
     
     @staticmethod
-    def rpc(apis=[]):
+    def rpc(apis=[], debug=False):
         """
         Used to bind in urls.
         Will basically return an anonymous csrf_exempt-decorated Ext.use
         """
         return csrf_exempt(
-               lambda request, *args, **kwargs: Ext.use(request, apis))
+               lambda request, *args, **kwargs: Ext.use(request, apis, debug))
 
     @staticmethod
     def method(method):
