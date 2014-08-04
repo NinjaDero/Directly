@@ -124,7 +124,8 @@ class Ext():
                                 hasattr(sub_obj, '_is_ext')):
                                 if sub_name == method:
                                     # Method found, use it!
-                                    return Ext.useMethod(sub_obj, data, request)
+                                    return Ext.useMethod(
+                                        sub_obj, data, request)
         return None
 
     @staticmethod
@@ -194,9 +195,10 @@ class Ext():
 
         # This is what Sencha Architect expects. I deliver!
         if 'format' in request.REQUEST and request.REQUEST['format'] == 'json':
-            js_content = 'Ext.require(\'Ext.direct.*\');' +\
-            'Ext.namespace(\''+ namespace +'\');'+ namespace + \
-            '.REMOTING_API = ' + json.dumps(provider, default=datetime_iso) + ';'
+            js_content = 'Ext.require(\'Ext.direct.*\');' + \
+            'Ext.namespace(\'' + namespace + '\');'+ namespace + \
+            '.REMOTING_API = ' + json.dumps(provider,
+                                            default=datetime_iso) + ';'
         else:
             # Browser/regular .js
             js_content = 'Ext.direct.Manager.addProvider(' + \
@@ -213,13 +215,17 @@ class Ext():
                                         namespace, apis, url, request)
     
     @staticmethod
-    def rpc(apis=[], debug=False):
+    def rpc(apis=[], debug=False, exempt=True):
         """
         Used to bind in urls.
-        Will basically return an anonymous csrf_exempt-decorated Ext.use
+        exempt = False to keep the CSRF_TOKEN
         """
-        return csrf_exempt(
-               lambda request, *args, **kwargs: Ext.use(request, apis, debug))
+        if type(exempt) == bool and exempt:
+            return csrf_exempt(
+                lambda request, *args, **kwargs: Ext.use(request, apis, debug))
+        else:
+            return (
+                lambda request, *args, **kwargs: Ext.use(request, apis, debug)
 
     @staticmethod
     def method(method):
