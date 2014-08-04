@@ -16,7 +16,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 # Convert datetime objects into an ISO String 'Y-m-d\TH:i:s'
-ExtJson = (lambda obj:
+datetime_iso = (lambda obj:
                     obj.isoformat() if isinstance(obj, datetime) else None)
 
 # Regular screwup
@@ -47,7 +47,7 @@ class DirectlyClass():
 
 class Ext():
     @staticmethod
-    def use(request, direct_mods, debug):
+    def use(request, direct_mods, debug=False):
         """
         Takes RPC from request and searches a list or tuple direct_mods
         for ExtDirect classes and methods to take.
@@ -101,7 +101,7 @@ class Ext():
         return HttpResponse(
                 content=json.dumps(
                     content,
-                    default=ExtJson,
+                    default=datetime_iso,
                     ensure_ascii=False
                 ),
                 content_type='application/json')
@@ -196,11 +196,11 @@ class Ext():
         if 'format' in request.REQUEST and request.REQUEST['format'] == 'json':
             js_content = 'Ext.require(\'Ext.direct.*\');' +\
             'Ext.namespace(\''+ namespace +'\');'+ namespace + \
-            '.REMOTING_API = ' + json.dumps(provider, default=ExtJson) + ';'
+            '.REMOTING_API = ' + json.dumps(provider, default=datetime_iso) + ';'
         else:
             # Browser/regular .js
             js_content = 'Ext.direct.Manager.addProvider(' + \
-            json.dumps(provider, default=ExtJson) + ');'
+            json.dumps(provider, default=datetime_iso) + ');'
 
         return HttpResponse(js_content, content_type="application/javascript")
 
