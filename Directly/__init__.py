@@ -59,8 +59,12 @@ class Ext():
             return HttpResponse(
                 content=json.dumps(None),
                 content_type='application/json')
-        if debug:
+        # Print to console if debug is True
+        # Call function for custom printing or testing if it's callable
+        if type(debug) == bool and debug:
             print rpc_in
+        elif callable(debug):
+            debug(rpc_in)
 
         # Is it one or multiple modules?
         if type(direct_mods) not in [tuple, list]:
