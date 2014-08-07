@@ -5,7 +5,7 @@
 ---
 
 ## About
-Directly is a simplified ExtDirect implementation for Django apps using an ExtDirect frontend.
+Directly is a simplified ExtDirect implementation for Django apps using an ExtDirect frontend.<br/>
 My goal with this project was to make ExtDirect as easy as possible to use with Django, with the least amount of editing required.
 
 The idea is fairly simple, so let's keep this module simple!
@@ -23,8 +23,8 @@ If you're new to Django/ExtJS development and want to get into ExtDirect as fast
 
 
 ### Files to edit
-ExtDirect is supposed to be an interface between your server and your ExtJS app.
-That's why I want to stay out of views or settings. All redirecting is done through the **urls.py**.
+ExtDirect is supposed to be an interface between your server and your ExtJS app.<br/>
+That's why I want to stay out of views or settings. All redirecting is done through the **urls.py**.<br/>
 Obviously you'd need to write your python functions to call and the ExtJS part that calls them. But other than that, there is no special treatment for your existing Django project required.
 
 If you're new to ExtDirect and/or Django, read below. Otherwise scroll to the bottom of this file for a short summary.
@@ -34,12 +34,12 @@ If you're new to ExtDirect and/or Django, read below. Otherwise scroll to the bo
 ## Using Directly in 4 steps
 
 #### ======= 1: Create your backend functions =======
-Create a new python file in your app folder to write your functions into.
-In this example I will be creating a collections of functions to log the user in, out and retrieve their username.
+Create a new python file in your app folder to write your functions into.<br/>
+In this example I will be creating a collections of functions to log the user in, out and retrieve their username.<br/>
 I'll just call it **users.py**.
 
-In Directly we separate our namespaces by classes.
-The **UserAuth** class will be the one to call if I need to log in or out.
+In Directly we separate our namespaces by classes.<br/>
+The **UserAuth** class will be the one to call if I need to log in or out.<br/>
 The **UserStuff** class will be responsible for additional goodies, like getting the user's username.
 ```python
 # file: django_project/app/users.py
@@ -60,19 +60,18 @@ class UserStuff():
         return request.user.username
 
 ```
-All methods need the `@staticmethod` decoration, since they're standalone functions. We will not be using the classes in the 'traditional' way.
-Also, you get the `HttpRequest` like you usually do in your *views*, so your methods need at least one parameter, which will be the request, conveniently, also called `request`.
+All methods need the `@staticmethod` decoration, since they're standalone functions. We will not be using the classes in the 'traditional' way.<br/>
+Also, you get the `HttpRequest` like you usually do in your *views*, so your methods need at least one parameter, which will be the request, conveniently, also called `request`.<br/>
 Just imagine the functions `login()` and `logout()` actually exist and do log the user in and out.
 
 ---
 #### ======= 2: Decorate your methods to expose them =======
-Import **Directly** to your *users.py*
-All you really need is in the Ext class:
-`from Directly import Ext`
+Import **Directly** to your *users.py*<br/>
+All you really need is in the Ext class: `from Directly import Ext`
 
-Decorate your classes with `Ext.cls` and methods with `Ext.method`.
-This way, only the methods you want to be exposed to ExtJS will be exposed.
-All classes and methods without decoration will be ignored when creating the API, so you won't be able to access them from ExtJS.
+Decorate your classes with `Ext.cls` and methods with `Ext.method`.<br/>
+This way, only the methods you want to be exposed to ExtJS will be exposed.<br/>
+All classes and methods without decoration will be ignored when creating the API, so you won't be able to access them from ExtJS.<br/>
 Here's the code from above with decorations.
 ```python
 # file: django_project/app/users.py
@@ -116,12 +115,12 @@ urlpatterns = patterns('',
     url(r'^userAPI.js', Ext.getApi(namespace='SuperApp', apis=[users], url='/user')),
 )
 ```
-The API will now be accessible at `yourdomain/userAPI.js`.
-It doesn't have to be a `.js` extension, since it's not really a file behind it, but it seems to make more sense. ;)
-Arguments:
-`namespace`: The name at which you can call your classes. Defaults to `Directly`
-`apis`: Your module(s) (files), cointainung your classes. It can be either a single one, or a list/tuple of modules.
-`url`: The url where all ExtDirect calls using your API will be sent to.
+The API will now be accessible at `yourdomain/userAPI.js`.<br/>
+It doesn't have to be a `.js` extension, since it's not really a file behind it, but it seems to make more sense. ;)<br/><br/>
+Arguments:<br/>
+* `namespace`: The name at which you can call your classes. Defaults to `Directly`
+* `apis`: Your module(s) (files), cointainung your classes. It can be either a single one, or a list/tuple of modules.
+* `url`: The url where all ExtDirect calls using your API will be sent to.
 
 Import the js in your html template.
 ```html
@@ -151,13 +150,13 @@ urlpatterns = patterns('',
 )
 ```
 Arguments:
-`apis`: Again, a list of modules with your classes. It doesn't have to be the same as the ones in Ext.getApi, so you can split your API and process different methods on different URLs.
+* `apis`: Again, a list of modules with your classes.<br/>It doesn't have to be the same as the ones in Ext.getApi, so you can split your API and process different methods on different URLs.
 
 ---
 That's it.
 
-Now, to log in with this example in ExtJS, you can use the API like it's a JS function.
-You need Ext.direct.* imported manually, if you're working with Architect.
+Now, to log in with this example in ExtJS, you can use the API like it's a JS function.<br/>
+You need Ext.direct.* imported manually, if you're working with Architect.<br/>
 For more information on where to replace your Ajax-calls with ExtDirect, check the [sencha examples][2].
 
 Use them like `Namespace.Class.method(*arguments*, callback_function)`.
@@ -177,8 +176,8 @@ SuperApp.UserStuff.get_username(function(val) {
 ## What else?
 
 `Ext.rpc` currently takes two optional arguments:
-`debug`: True/False/Function - Prints every RPC object to console if True, or calls a function providing the RPC object as an argument. Defaults to *False*.
-`exempt`: True/False - Does not decorate with [csrf_exempt][3] if False. You need to handle it yourself if you want to use it. Defaults to *True* for simplicity.
+* `debug`: True/False/Function - Prints every RPC object to console if True, or calls a function providing the RPC object as an argument. Defaults to *False*.
+* `exempt`: True/False - Does not decorate with [csrf_exempt][3] if False. You need to handle it yourself if you want to use it. Defaults to *True* for simplicity.
 
 ---
 
