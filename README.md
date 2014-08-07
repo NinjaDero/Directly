@@ -211,7 +211,7 @@ from app import direct
 
 ##### Use it
 ```javascript
-# console
+// console
 ExtNamespace.A.b(function(ret) {
     console.log(ret);
 });
