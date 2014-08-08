@@ -1,11 +1,11 @@
 # Directly
 
-[Apply Directly to the Django][1].
+[Apply Directly to the Django][headon].
 
 ---
 
 ## About
-Directly is a simplified ExtDirect implementation for Django apps using an ExtDirect frontend.<br/>
+Directly is a simplified ExtDirect implementation for [Django][django] apps using an [ExtJS][sencha] frontend.<br/>
 My goal with this project was to make ExtDirect as easy as possible to use with Django, with the least amount of editing required.
 
 The idea is fairly simple, so let's keep this module simple!
@@ -157,7 +157,7 @@ That's it.
 
 Now, to log in with this example in ExtJS, you can use the API like it's a JS function.<br/>
 You need Ext.direct.* imported manually, if you're working with Architect.<br/>
-For more information on where to replace your Ajax-calls with ExtDirect, check the [sencha examples][2].
+For more information on where to replace your Ajax-calls with ExtDirect, check the [sencha examples][examples].
 
 Use them like `Namespace.Class.method(*arguments*, callback_function)`.
 ```javascript
@@ -177,7 +177,7 @@ SuperApp.UserStuff.get_username(function(val) {
 
 `Ext.rpc` currently takes two optional arguments:
 * `debug`: True/False/Function - Prints every RPC object to console if True, or calls a function providing the RPC object as an argument. Defaults to *False*.
-* `exempt`: True/False - Does not decorate with [csrf_exempt][3] if False. You need to handle it yourself if you want to use it. Defaults to *True* for simplicity.
+* `exempt`: True/False - Does not decorate with [csrf_exempt][csrf] if False. You need to handle it yourself if you want to use it. Defaults to *True* for simplicity.
 
 ---
 
@@ -218,6 +218,8 @@ ExtNamespace.A.b(function(ret) {
 
 Dun.
 
-  [1]: http://en.wikipedia.org/wiki/HeadOn "(It's a joke)"
-  [2]: http://docs.sencha.com/extjs/4.2.2/#!/example/direct/direct.html
-  [3]: https://docs.djangoproject.com/en/1.6/ref/contrib/csrf/
+  [headon]: http://en.wikipedia.org/wiki/HeadOn "(It's a joke)"
+  [examples]: http://docs.sencha.com/extjs/4.2.2/#!/example/direct/direct.html
+  [csrf]: https://docs.djangoproject.com/en/1.6/ref/contrib/csrf/
+  [django]: https://www.djangoproject.com/
+  [sencha]: http://www.sencha.com/products/extjs/
