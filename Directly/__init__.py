@@ -225,7 +225,7 @@ class Ext():
                 lambda request, *args, **kwargs: Ext.use(request, apis, debug))
         else:
             return (
-                lambda request, *args, **kwargs: Ext.use(request, apis, debug)
+                lambda request, *args, **kwargs: Ext.use(request, apis, debug))
 
     @staticmethod
     def method(method):
