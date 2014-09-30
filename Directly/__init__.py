@@ -157,7 +157,7 @@ class Ext():
         return answer
 
     @staticmethod
-    def generateApi(namespace, direct_mods, url, request):
+    def generateApi(namespace, direct_mods, url, request, form):
         """
         Generates the API JavaScript part using provided modules, 
         namespace and calling url
@@ -193,26 +193,32 @@ class Ext():
         # At this point the provider dict is complete
         provider['actions'] = classes
 
-        # This is what Sencha Architect expects. I deliver!
+        # This is what Sencha Architect requires
         if 'format' in request.REQUEST and request.REQUEST['format'] == 'json':
-            js_content = 'Ext.require(\'Ext.direct.*\');' + \
-            'Ext.namespace(\'' + namespace + '\');'+ namespace + \
-            '.REMOTING_API = ' + json.dumps(provider,
+            js_content = '.REMOTING_API = ' + json.dumps(provider,
                                             default=datetime_iso) + ';'
         else:
-            # Browser/regular .js
-            js_content = 'Ext.direct.Manager.addProvider(' + \
-            json.dumps(provider, default=datetime_iso) + ');'
+            # Non-executed JSON in case one would want to apply it manually
+            if form == 'json':
+                js_content = Ext.createJson(namespace, provider)
+            # Executable non-Ext JavaScript, which creates old-school
+            # NAMESPACE.REMOTING_API variable
+            elif form == 'var':
+                js_content = Ext.createVar(namespace, provider)
+            # Executable ExtJS code, applies API automatically
+            else:
+                js_content = Ext.createExt(namespace, provider)
 
         return HttpResponse(js_content, content_type="application/javascript")
 
     @staticmethod
-    def getApi(namespace='Directly', apis=[], url='/directly'):
+    def getApi(namespace='Directly', apis=[], 
+               url='/directly', form='ext'):
         """
         Returns modified function, so we can use it in the urls config
         """
         return lambda request, *args: Ext.generateApi(
-                                        namespace, apis, url, request)
+                                      namespace, apis, url, request, form)
     
     @staticmethod
     def rpc(apis=[], debug=False, exempt=True):
@@ -226,6 +232,32 @@ class Ext():
         else:
             return (
                 lambda request, *args, **kwargs: Ext.use(request, apis, debug))
+                
+    @staticmethod
+    def createJson(namespace, provider):
+        """
+        Returns regular JSON
+        """
+        return json.dumps(provider, default=datetime_iso)
+        
+    @staticmethod
+    def createVar(namespace, provider):
+        """
+        Returns API as a variable, needs to be added manually
+        """
+        return 'var {0} = {0} || {{}}; \
+            {0}.REMOTING_API = {0}.REMOTING_API || []; \
+            {0}.REMOTING_API.push({1})'.format(namespace, Ext.createJson(
+                                                          namespace, provider))
+        
+    @staticmethod
+    def createExt(namespace, provider):
+        """
+        Returns ExtJS-style JavaScript
+        """
+        return 'Ext.require(\'Ext.direct.*\');' + \
+            'Ext.direct.Manager.addProvider(' + \
+            Ext.createJson(namespace, provider) + ');'
 
     @staticmethod
     def method(method):
