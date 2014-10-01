@@ -197,7 +197,7 @@ Possible workarounds:
             "enable": false
         },
         "manifest": {
-            "enable: false
+            "enable": false
         }
     }
 [...]
