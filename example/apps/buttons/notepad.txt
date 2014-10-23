@@ -1,0 +1,9 @@
+If you can read this, everything seems to work just fine.
+
+This text is a file inside apps/buttons called notepad.txt.
+
+Methods to read/write can be found in methods/Notepad.py.
+
+Methods for all button-actions are inside methods/Buttons.py.
+
+Every action should show a notification in the lower right corner.
