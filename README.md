@@ -16,10 +16,14 @@ The idea is fairly simple, so let's keep this module simple!
 If you're new to Django/ExtJS development and want to get into ExtDirect as fast as possible, this might be perfect for you.
 
 
-### Developed and tested with:
+### Developed with:
 * Python 2.7.6
 * Django 1.6.5
 * ExtJS 4.2
+
+### Additionally tested with:
+* Django 1.7
+* ExtJS 5.0 (See [notes](#notes-ext5) at the end for possible issues)
 
 
 ### Files to edit
@@ -178,6 +182,51 @@ SuperApp.UserStuff.get_username(function(val) {
 `Ext.rpc` currently takes two optional arguments:
 * `debug`: True/False/Function - Prints every RPC object to console if True, or calls a function providing the RPC object as an argument. Defaults to *False*.
 * `exempt`: True/False - Does not decorate with [csrf_exempt][csrf] if False. You need to handle it yourself if you want to use it. Defaults to *True* for simplicity.
+
+
+<a name="notes-ext5"></a>
+`ExtJS 5.x` with `Sencha Architect 3.1` now defaults to using the microloader.
+If you're using the microloader, it might try to load your API before loading the `app.js`, resulting in `Ext` being undefined when calling `Ext.direct.Manager[...]`.
+Possible workarounds:
+#### Disable microloader and manifest in app.json:
+```json
+{
+[...]
+    "output": {
+        "microloader": {
+            "enable": false
+        },
+        "manifest": {
+            "enable": false
+        }
+    }
+[...]
+}
+```
+This way the old-skool single-file app is generated and you're free to include your generated API after that.
+
+
+#### Generate non-executed / non-Ext API code and run it yourself:
+I've added an additional optional keyword to `getApi`: *form*<br/>
+It takes a string keyword:
+* 'json': Generates pure JSON representation of your API.
+* 'var': Generates `Namespace.REMOTING_API` variable containing your API.
+* Anything else will result in the regular self-executing Ext-code.<br/>
+Both of the above need to be added using `Ext.direct.Manager.addProvider(apiObj)` inside your app. I suggest using the launch listener:
+```javascript
+launch: function() {
+    Ext.create('Project.view.Viewport');
+    if(Project.REMOTING_API !== undefined) {
+        if(Project.REMOTING_API instanceof Array) {
+            Ext.each(Project.REMOTING_API, function(api) {
+                Ext.direct.Manager.addProvider(api);
+            });
+        }
+    }
+}
+```
+It's less intuitive and I don't like it tbh. It's against my hopes to keep the module as simple as possible, but it works.
+
 
 ---
 
